@@ -2548,89 +2548,117 @@ body {
 /* Options */
 /* ================= LOGIN OPTIONS ================= */
 
-.login-options {
+/* PAGE */
+.auth-page {
+  display: flex;
+  min-height: 100vh;
+  font-family: "Inter", sans-serif;
+}
+
+/* LEFT SIDE */
+.auth-left {
+  flex: 1;
+  padding: 80px;
+  background: linear-gradient(135deg, #ff4d6d, #845ec2);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.auth-brand {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 40px;
+}
+
+.auth-left h2 {
+  font-size: 42px;
+  max-width: 400px;
+}
+
+.auth-left p {
+  margin-top: 20px;
+  opacity: 0.9;
+  max-width: 360px;
+}
+
+/* RIGHT SIDE */
+.auth-right {
+  flex: 1;
+  background: #f7f8fc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* CARD */
+.auth-card {
+  background: white;
+  width: 380px;
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+}
+
+.auth-title {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+/* INPUTS */
+.auth-card input[type="text"],
+.auth-card input[type="password"] {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 14px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.auth-card input:focus {
+  outline: none;
+  border-color: #845ec2;
+}
+
+/* OPTIONS */
+.auth-options {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin: 14px 0 18px;
   font-size: 13px;
+  margin-bottom: 20px;
 }
 
-.remember-me {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  color: #333;
-}
-
-.remember-me input {
-  width: 14px;
-  height: 14px;
-  cursor: pointer;
-}
-
-.forgot-link {
-  color: #4a3aff;
-  text-decoration: none;
-  font-size: 13px;
-}
-
-.forgot-link:hover {
-  text-decoration: underline;
-}
-
-
-/* Button */
-.login-btn {
+/* BUTTON */
+.auth-card button {
   width: 100%;
-  padding: 10px;
-  border-radius: 20px;
+  padding: 14px;
+  border-radius: 999px;
   border: none;
-  background: #ffffff;
+  background: linear-gradient(90deg, #845ec2, #d65db1);
+  color: white;
   font-weight: 600;
   cursor: pointer;
-  margin-bottom: 16px;
 }
 
-/* Signup */
-.signup-text {
-  font-size: 13px;
+.auth-card button:disabled {
+  opacity: 0.7;
 }
 
-.signup-text a {
-  color: #3b5bdb;
-  text-decoration: none;
-}
-
-/* Footer */
-.login-footer {
-  padding: 16px;
+/* FOOTER */
+.auth-footer {
   text-align: center;
-  font-size: 12px;
-  color: #444;
-  border-top: 1px solid #ddd;
+  margin-top: 20px;
+  font-size: 14px;
 }
 
-/* Mobile */
-@media (max-width: 480px) {
-  .login-card {
-    padding: 24px 20px;
-  }
+.error-text {
+  color: red;
+  font-size: 14px;
+  margin-bottom: 10px;
 }
 
-.brand-link {
-  text-decoration: none;
-  color: inherit;
-}
-
-.brand-link:hover {
-  opacity: 0.85;
-}
-
-.brand {
-  cursor: pointer;
-}
 
 
 /* ================= HAMBURGER ================= */

@@ -1,8 +1,12 @@
-require("dotenv").config()
-const app = require("./app")
+require("dotenv").config();
 
-const PORT = process.env.PORT || 5000
+console.log("👉 DB_NAME from env:", process.env.DB_NAME);
+console.log("👉 DB_PORT from env:", process.env.DB_PORT);
+
+const app = require("./app");
+
+const PORT = 5000;
 
 app.listen(PORT, () => {
-  console.log(`Backend running on http://localhost:${PORT}`)
-})
+  console.log("Backend running on http://localhost:5000");
+});
