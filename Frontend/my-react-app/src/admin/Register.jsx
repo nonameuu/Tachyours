@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
 
 const Register = () => {
   const [form, setForm] = useState({
@@ -10,10 +9,13 @@ const Register = () => {
   });
 
   const navigate = useNavigate();
-
-
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    document.body.classList.add("page-enter");
+    return () => document.body.classList.remove("page-enter");
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -25,8 +27,7 @@ const Register = () => {
     setSuccess("");
 
     try {
-      const res = await fetch("/api/auth/register", {
-
+      const res = await fetch("http://localhost:5000/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -46,8 +47,7 @@ const Register = () => {
   };
 
   return (
-    <div className="signup-root">
-      {/* LEFT */}
+    <div className="signup-root page">
       <section className="left-panel">
         <div className="branding">
           <h1>
@@ -59,7 +59,6 @@ const Register = () => {
         </div>
       </section>
 
-      {/* RIGHT */}
       <section className="right-panel">
         <div className="form-card">
           <h2>SIGN UP</h2>
@@ -117,19 +116,77 @@ const Register = () => {
             </button>
           </form>
 
-         <p className="secondary">
-  Already have an account?{" "}
-  <span
-    className="login-highlight"
-    onClick={() => navigate("/login")}
-    style={{ cursor: "pointer" }}
-  >
-    Login
-  </span>
-</p>
-
+          <p className="secondary">
+            Already have an account?{" "}
+            <span className="login-highlight" onClick={() => navigate("/login")}>
+              Login
+            </span>
+          </p>
         </div>
       </section>
+
+
+      <style>{`
+        * { box-sizing: border-box; font-family: "Montserrat", sans-serif; }
+        body { margin: 0; }
+
+        .page { animation: fadeSlide 0.45s ease forwards; }
+
+        @keyframes fadeSlide {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-card {
+          animation: cardPop 0.45s ease 0.1s both;
+        }
+
+        @keyframes cardPop {
+          from { opacity: 0; transform: scale(0.96) translateY(12px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .signup-root {
+          height: 100vh;
+          display: flex;
+          background: linear-gradient(135deg,#f3e8ff,#e6f0ff,#dcf7ef);
+        }
+
+        .left-panel { flex: 1; display: flex; align-items: center; }
+        .branding { padding-left: 120px; max-width: 600px; }
+        .branding h1 {
+          font-family: "Playfair Display", serif;
+          font-size: 52px; font-weight: 600; color: #111;
+        }
+        .branding p { font-size: 17px; color: #333; }
+
+        .right-panel {
+          flex: 1; display: flex; align-items: center;
+          justify-content: flex-start; padding-left: 200px;
+        }
+
+        .form-card {
+          width: 360px; padding: 28px; border-radius: 22px;
+          background: rgba(255,255,255,0.65);
+          backdrop-filter: blur(16px);
+          box-shadow: 0 36px 70px rgba(0,0,0,0.15);
+        }
+
+        .primary-btn {
+          height: 44px; border-radius: 999px; border: none;
+          background: linear-gradient(135deg,#cbb8ff,#a79bff);
+          font-weight: 600; cursor: pointer;
+        }
+
+        .secondary { text-align: center; font-size: 12.5px; margin-top: 16px; }
+        .login-highlight { color: #7b5cff; font-weight: 600; cursor: pointer; }
+
+        @media (max-width: 768px) {
+          .left-panel { display: none; }
+          .right-panel { justify-content: center; padding-left: 0; }
+        }
+      `}</style>  
+
 
       {/* CSS */}
       <style>{`

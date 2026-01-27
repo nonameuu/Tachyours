@@ -1,55 +1,123 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    identifier: "",
-    password: "",
-  });
-
+  const [form, setForm] = useState({ identifier: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // 🔐 VERIFICATION STATES
+  const [showVerify, setShowVerify] = useState(false);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otpError, setOtpError] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    document.body.classList.add("page-enter");
+    return () => document.body.classList.remove("page-enter");
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // ✅ SIGN IN → SHOW AUTH MODAL
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  e.preventDefault();
+  setError("");
+  setLoading(true);
+
+  try {
+    const res = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setError(data.message || "Login failed");
+      return;
+    }
+
+    // ✅ Credentials OK → SHOW AUTH MODAL
+    setShowVerify(true);
+    startCooldown();
+
+  } catch (err) {
+    console.error(err);
+    setError("Server error. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  // OTP INPUT
+  const handleOtpChange = (value, index) => {
+    if (!/^\d?$/.test(value)) return;
+
+    const updated = [...otp];
+    updated[index] = value;
+    setOtp(updated);
+    setOtpError("");
+
+    if (value && index < 5) {
+      document.getElementById(`otp-${index + 1}`)?.focus();
+    }
+  };
+
+  const allFilled = otp.every((d) => d !== "");
+
+  // VERIFY OTP
+  const verifyOtp = async () => {
+    setVerifying(true);
+    setOtpError("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/login", {
+      const res = await fetch("http://localhost:5000/api/verify-login-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          identifier: form.identifier,
+          code: otp.join(""),
+        }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || "Login failed");
+        setOtpError(data.message || "Invalid verification code");
       } else {
-        localStorage.setItem("user", JSON.stringify(data.user));
-
-        if (data.user.role === "admin") {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/");
-        }
+        navigate("/");
       }
     } catch {
-      setError("Server error. Please try again.");
+      setOtpError("Verification failed");
     } finally {
-      setLoading(false);
+      setVerifying(false);
     }
   };
 
+  // RESEND OTP
+  const startCooldown = () => {
+    setCooldown(60);
+    const timer = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
   return (
-    <div className="signup-root">
+    <div className="signup-root page">
       {/* LEFT */}
       <section className="left-panel">
         <div className="branding">
@@ -66,6 +134,19 @@ const Login = () => {
       <section className="right-panel">
         <div className="form-card">
           <h2>SIGN IN</h2>
+
+          {/* ✅ GOOGLE SIGN IN (KEPT) */}
+          <button className="google-btn" type="button">
+            <img
+              src="https://www.svgrepo.com/show/475656/google-color.svg"
+              alt="Google"
+            />
+            Sign in with Google
+          </button>
+
+          <div className="divider">
+            <span>OR</span>
+          </div>
 
           <form onSubmit={handleSubmit}>
             <div className="field">
@@ -91,15 +172,14 @@ const Login = () => {
               />
             </div>
 
-            {error && (
-              <p style={{ color: "red", fontSize: 12 }}>{error}</p>
-            )}
+            {error && <p style={{ color: "red", fontSize: 12 }}>{error}</p>}
 
-            <button className="primary-btn" type="submit" disabled={loading}>
+            <button className="primary-btn" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 
+          {/* ✅ SIGN UP TEXT (KEPT) */}
           <p className="secondary">
             Don’t have an account?{" "}
             <span
@@ -112,8 +192,212 @@ const Login = () => {
         </div>
       </section>
 
-      {/* CSS */}
+      {/* 🔐 AUTH MODAL */}
+      {showVerify && (
+        <div className="auth-overlay">
+          <div className="auth-modal">
+            <h3>Verify Your Sign In</h3>
+            <p>We sent a verification code to your email or phone.</p>
+
+            <div className="otp-box">
+              {otp.map((digit, i) => (
+                <input
+                  key={i}
+                  id={`otp-${i}`}
+                  value={digit}
+                  maxLength={1}
+                  onChange={(e) =>
+                    handleOtpChange(e.target.value, i)
+                  }
+                />
+              ))}
+            </div>
+
+            {otpError && (
+              <p style={{ color: "red", fontSize: 12 }}>{otpError}</p>
+            )}
+
+            <div className="verify-wrapper">
+          <button
+        className="verify-btn"
+         disabled={!allFilled || verifying}
+         onClick={verifyOtp}
+  >
+           {verifying ? "Verifying..." : "Verify"}
+        </button>
+        </div>
+
+
+            <button
+              className="resend"
+              disabled={cooldown > 0}
+              onClick={startCooldown}
+            >
+              {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend Code"}
+            </button>
+          </div>
+        </div>
+      )}
+    
+
+
+      {/* AUTH MODAL CSS */}
       <style>{`
+        .auth-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.6);
+          z-index: 2147483647; /* MAX SAFE */
+        
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.45);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 999;
+        }
+
+        .verify-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.verify-btn {
+  padding: 12px 34px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #cbb8ff, #a79bff);
+  color: #2a2140;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.verify-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+          {showVerify && (
+        <div style={{
+    position: "fixed",
+    inset: 0,
+    background: "red",
+    zIndex: 999999
+  }}>
+    TEST MODAL
+  </div>
+)}
+
+        .auth-modal {
+          background: white;
+          width: 360px;
+          padding: 28px;
+          border-radius: 22px;
+          text-align: center;
+          box-shadow: 0 30px 60px rgba(0,0,0,0.25);
+          animation: fadeIn 0.3s ease;
+        }
+
+        .otp-box {
+          display: flex;
+          justify-content: space-between;
+          margin: 20px 0;
+        }
+
+        .otp-box input {
+          width: 44px;
+          height: 52px;
+          font-size: 22px;
+          text-align: center;
+          border-radius: 10px;
+          border: 1px solid #ccc;
+        }
+
+        .resend {
+          margin-top: 12px;
+          background: none;
+          border: none;
+          font-size: 12px;
+          cursor: pointer;
+          color: #7b5cff;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+          .auth-modal {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+          }
+        }
+  
+        * { box-sizing: border-box; font-family: "Montserrat", sans-serif; }
+        body { margin: 0; }
+
+        .page { animation: fadeSlide 0.45s ease forwards; }
+
+        @keyframes fadeSlide {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-card {
+          animation: cardPop 0.45s ease 0.1s both;
+        }
+
+        @keyframes cardPop {
+          from { opacity: 0; transform: scale(0.96) translateY(12px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .signup-root {
+          height: 100vh;
+          display: flex;
+          background: linear-gradient(135deg,#f3e8ff,#e6f0ff,#dcf7ef);
+        }
+
+        .left-panel { flex: 1; display: flex; align-items: center; }
+        .branding { padding-left: 120px; max-width: 600px; }
+        .branding h1 {
+          font-family: "Playfair Display", serif;
+          font-size: 52px; font-weight: 600; color: #111;
+        }
+        .branding p { font-size: 17px; color: #333; }
+
+        .right-panel {
+          flex: 1; display: flex; align-items: center;
+          justify-content: flex-start; padding-left: 200px;
+        }
+
+        .form-card {
+          width: 360px; padding: 28px; border-radius: 22px;
+          background: rgba(255,255,255,0.65);
+          backdrop-filter: blur(16px);
+          box-shadow: 0 36px 70px rgba(0,0,0,0.15);
+        }
+
+        .primary-btn {
+          height: 44px; border-radius: 999px; border: none;
+          background: linear-gradient(135deg,#cbb8ff,#a79bff);
+          font-weight: 600; cursor: pointer;
+        }
+
+        .secondary { text-align: center; font-size: 12.5px; margin-top: 16px; }
+        .login-highlight { color: #7b5cff; font-weight: 600; cursor: pointer; }
+
+        @media (max-width: 768px) {
+          .left-panel { display: none; }
+          .right-panel { justify-content: center; padding-left: 0; }
+        }
+    
         * {
           box-sizing: border-box;
           font-family: "Montserrat", sans-serif;
@@ -220,6 +504,44 @@ const Login = () => {
         input:focus {
           outline: none;
           border-color: #bba8ff;
+        }
+        
+                /* DIVIDER */
+        .divider {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin: 14px 0;
+          font-size: 12px;
+          color: #666;
+        }
+
+        .divider::before,
+        .divider::after {
+          content: "";
+          flex: 1;
+          height: 1px;
+          background: #ccc;
+        }
+
+
+                /* GOOGLE */
+        .google-btn {
+          width: 100%;
+          height: 44px;
+          border-radius: 12px;
+          border: none;
+          background: #fff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          font-size: 14px;
+          cursor: pointer;
+        }
+
+        .google-btn img {
+          width: 18px;
         }
 
         /* PRIMARY BUTTON */
