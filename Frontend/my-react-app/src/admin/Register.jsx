@@ -12,6 +12,13 @@ const Register = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // 🔐 AUTH STATES (MOVED FROM LOGIN)
+  const [showVerify, setShowVerify] = useState(false);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otpError, setOtpError] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
   useEffect(() => {
     document.body.classList.add("page-enter");
     return () => document.body.classList.remove("page-enter");
@@ -21,6 +28,7 @@ const Register = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // ✅ REGISTER → SHOW AUTH MODAL
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -37,13 +45,78 @@ const Register = () => {
 
       if (!res.ok) {
         setError(data.message || "Something went wrong");
-      } else {
-        setSuccess("Account created successfully 🎉");
-        setForm({ full_name: "", username: "", password: "" });
+        return;
       }
+
+      // ✅ SUCCESS → OPEN AUTH MODAL
+      setSuccess("Account created successfully 🎉");
+      setShowVerify(true);
+      startCooldown();
     } catch {
       setError("Backend not reachable");
     }
+  };
+
+  // OTP INPUT
+  const handleOtpChange = (value, index) => {
+    if (!/^\d?$/.test(value)) return;
+
+    const updated = [...otp];
+    updated[index] = value;
+    setOtp(updated);
+    setOtpError("");
+
+    if (value && index < 5) {
+      document.getElementById(`otp-${index + 1}`)?.focus();
+    }
+  };
+
+  const allFilled = otp.every((d) => d !== "");
+
+  // VERIFY OTP
+  const verifyOtp = async () => {
+    setVerifying(true);
+    setOtpError("");
+
+    try {
+      const res = await fetch(
+        "http://localhost:5000/api/auth/verify-login-otp",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            identifier: form.username,
+            code: otp.join(""),
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setOtpError(data.message || "Invalid verification code");
+      } else {
+        navigate("/");
+      }
+    } catch {
+      setOtpError("Verification failed");
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  // RESEND OTP
+  const startCooldown = () => {
+    setCooldown(60);
+    const timer = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
   };
 
   return (
@@ -82,7 +155,6 @@ const Register = () => {
                 name="full_name"
                 value={form.full_name}
                 onChange={handleChange}
-                placeholder="Your name"
               />
             </div>
 
@@ -92,7 +164,6 @@ const Register = () => {
                 name="username"
                 value={form.username}
                 onChange={handleChange}
-                placeholder="username"
               />
             </div>
 
@@ -103,13 +174,13 @@ const Register = () => {
                 name="password"
                 value={form.password}
                 onChange={handleChange}
-                placeholder="Your password"
               />
-              <small>Must be at least 8 characters</small>
             </div>
 
             {error && <p style={{ color: "red", fontSize: 12 }}>{error}</p>}
-            {success && <p style={{ color: "green", fontSize: 12 }}>{success}</p>}
+            {success && (
+              <p style={{ color: "green", fontSize: 12 }}>{success}</p>
+            )}
 
             <button className="primary-btn" type="submit">
               Create Account
@@ -125,8 +196,125 @@ const Register = () => {
         </div>
       </section>
 
+      {/* 🔐 AUTHENTICATION MODAL UI */}
+      {showVerify && (
+        <div className="auth-overlay">
+          <div className="auth-modal">
+            <h3>Verify Your Account</h3>
+            <p>We sent a verification code to your email or phone.</p>
 
+            <div className="otp-box">
+              {otp.map((digit, i) => (
+                <input
+                  key={i}
+                  id={`otp-${i}`}
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleOtpChange(e.target.value, i)}
+                />
+              ))}
+            </div>
+
+            {otpError && (
+              <p style={{ color: "red", fontSize: 12 }}>{otpError}</p>
+            )}
+
+<div className="verify-wrapper">
+  <button
+    className="verify-btn"
+    disabled={!allFilled || verifying}
+    onClick={verifyOtp}
+  >
+    {verifying ? "Verifying..." : "Verify"}
+  </button>
+</div>
+
+<button
+  className="resend"
+  disabled={cooldown > 0}
+  onClick={startCooldown}
+>
+  {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend Code"}
+</button>
+
+          </div>
+        </div>
+      )}
+
+      {/* 🔐 AUTH MODAL CSS */}
       <style>{`
+        .auth-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.45);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 9999;
+        }
+
+        .auth-modal {
+          background: white;
+          width: 360px;
+          padding: 28px;
+          border-radius: 22px;
+          text-align: center;
+          box-shadow: 0 30px 60px rgba(0,0,0,0.25);
+          animation: fadeIn 0.3s ease;
+        }
+
+        .otp-box {
+          display: flex;
+          justify-content: space-between;
+          margin: 20px 0;
+        }
+
+        .otp-box input {
+          width: 44px;
+          height: 52px;
+          font-size: 22px;
+          text-align: center;
+          border-radius: 10px;
+          border: 1px solid #ccc;
+        }
+
+        .verify-btn {
+          margin-top: 16px;
+          padding: 12px 34px;
+          border-radius: 999px;
+          border: none;
+          background: linear-gradient(135deg,#cbb8ff,#a79bff);
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        .verify-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .resend {
+          margin-top: 12px;
+          background: none;
+          border: none;
+          font-size: 12px;
+          cursor: pointer;
+          color: #7b5cff;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+          .auth-modal {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+          }
+        }
+     
         * { box-sizing: border-box; font-family: "Montserrat", sans-serif; }
         body { margin: 0; }
 
