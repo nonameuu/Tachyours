@@ -1,9 +1,53 @@
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 
 const Register = () => {
+  const [form, setForm] = useState({
+    full_name: "",
+    username: "",
+    password: "",
+  });
+
+  const navigate = useNavigate();
+
+
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    try {
+      const res = await fetch("/api/auth/register", {
+
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Something went wrong");
+      } else {
+        setSuccess("Account created successfully 🎉");
+        setForm({ full_name: "", username: "", password: "" });
+      }
+    } catch {
+      setError("Backend not reachable");
+    }
+  };
+
   return (
     <div className="signup-root">
-      {/* LEFT – BRANDING */}
+      {/* LEFT */}
       <section className="left-panel">
         <div className="branding">
           <h1>
@@ -15,13 +59,12 @@ const Register = () => {
         </div>
       </section>
 
-      {/* RIGHT – FORM */}
+      {/* RIGHT */}
       <section className="right-panel">
         <div className="form-card">
           <h2>SIGN UP</h2>
 
-          {/* GOOGLE SIGN UP */}
-          <button className="google-btn">
+          <button className="google-btn" type="button">
             <img
               src="https://www.svgrepo.com/show/475656/google-color.svg"
               alt="Google"
@@ -33,30 +76,58 @@ const Register = () => {
             <span>OR</span>
           </div>
 
-          <form>
+          <form onSubmit={handleSubmit}>
             <div className="field">
               <label>Full Name</label>
-              <input placeholder="Your name" />
+              <input
+                name="full_name"
+                value={form.full_name}
+                onChange={handleChange}
+                placeholder="Your name"
+              />
             </div>
 
             <div className="field">
               <label>Username</label>
-              <input placeholder="username" />
+              <input
+                name="username"
+                value={form.username}
+                onChange={handleChange}
+                placeholder="username"
+              />
             </div>
 
             <div className="field">
               <label>Password</label>
-              <input type="password" placeholder="Your password" />
+              <input
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="Your password"
+              />
               <small>Must be at least 8 characters</small>
             </div>
 
-            <button className="primary-btn">Create Account</button>
+            {error && <p style={{ color: "red", fontSize: 12 }}>{error}</p>}
+            {success && <p style={{ color: "green", fontSize: 12 }}>{success}</p>}
+
+            <button className="primary-btn" type="submit">
+              Create Account
+            </button>
           </form>
 
-          <p className="secondary">
-            Already have an account?{" "}
-            <span className="login-highlight">Login</span>
-          </p>
+         <p className="secondary">
+  Already have an account?{" "}
+  <span
+    className="login-highlight"
+    onClick={() => navigate("/login")}
+    style={{ cursor: "pointer" }}
+  >
+    Login
+  </span>
+</p>
+
         </div>
       </section>
 
@@ -64,36 +135,32 @@ const Register = () => {
       <style>{`
         * {
           box-sizing: border-box;
-          font-family: "Inter", system-ui, sans-serif;
+          font-family: "Montserrat", sans-serif;
         }
 
         body {
           margin: 0;
-          background: #000;
         }
 
         .signup-root {
           height: 100vh;
           display: flex;
-        }
-
-        /* LEFT PANEL */
-        .left-panel {
-          flex: 1;
           background: linear-gradient(
             135deg,
             #f3e8ff,
             #e6f0ff,
             #dcf7ef
           );
-          position: relative;
+        }
+
+        /* LEFT */
+        .left-panel {
+          flex: 1;
+          display: flex;
+          align-items: center;
         }
 
         .branding {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
           padding-left: 120px;
           max-width: 600px;
         }
@@ -102,52 +169,50 @@ const Register = () => {
           font-family: "Playfair Display", serif;
           font-size: 52px;
           font-weight: 600;
-          margin-bottom: 18px;
+          margin-bottom: 14px;
           color: #111;
         }
 
         .branding p {
-          font-size: 18px;
+          font-size: 17px;
           line-height: 1.6;
           color: #333;
         }
 
-        /* RIGHT PANEL */
+        /* RIGHT */
         .right-panel {
-          width: 460px;
-          background: radial-gradient(circle at top, #2a2535, #0f0e14);
+          flex: 1;
           display: flex;
           align-items: center;
-          justify-content: center;
+          justify-content: flex-start;
+          padding-left: 200px;
         }
 
         /* FORM CARD */
         .form-card {
-          width: 100%;
-          max-width: 360px;
-          padding: 32px;
+          width: 360px;
+          padding: 28px;
           border-radius: 22px;
-          background: rgba(255,255,255,0.08);
-          backdrop-filter: blur(14px);
-          box-shadow: 0 40px 80px rgba(0,0,0,0.45);
-          color: #fff;
+          background: rgba(255,255,255,0.65);
+          backdrop-filter: blur(16px);
+          box-shadow: 0 36px 70px rgba(0,0,0,0.15);
+          margin-left: 10px;
         }
 
         .form-card h2 {
           text-align: center;
           letter-spacing: 3px;
-          font-size: 18px;
-          margin-bottom: 20px;
+          font-size: 17px;
+          margin-bottom: 16px;
         }
 
-        /* GOOGLE BUTTON */
+        /* GOOGLE */
         .google-btn {
           width: 100%;
           height: 44px;
           border-radius: 12px;
           border: none;
           background: #fff;
-          color: #333;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -165,9 +230,9 @@ const Register = () => {
           display: flex;
           align-items: center;
           gap: 12px;
-          margin: 18px 0;
+          margin: 14px 0;
           font-size: 12px;
-          color: #aaa;
+          color: #666;
         }
 
         .divider::before,
@@ -175,7 +240,7 @@ const Register = () => {
           content: "";
           flex: 1;
           height: 1px;
-          background: #333;
+          background: #ccc;
         }
 
         /* FORM */
@@ -191,66 +256,60 @@ const Register = () => {
         }
 
         label {
-          font-size: 13px;
-          margin-bottom: 6px;
-          color: #ccc;
+          font-size: 12.5px;
+          margin-bottom: 5px;
+          color: #333;
         }
 
         input {
-          height: 44px;
-          border-radius: 10px;
-          border: none;
-          background: rgba(255,255,255,0.12);
+          height: 42px;
           padding: 0 14px;
-          color: #fff;
+          border-radius: 10px;
+          border: 1px solid #ddd;
           font-size: 14px;
         }
 
         input::placeholder {
-          color: #777;
+          color: #999;
         }
 
         input:focus {
           outline: none;
-          background: rgba(255,255,255,0.18);
+          border-color: #bba8ff;
         }
 
         small {
-          margin-top: 6px;
-          font-size: 12px;
-          opacity: 0.7;
+          margin-top: 5px;
+          font-size: 11.5px;
+          color: #555;
         }
 
         /* PRIMARY BUTTON */
         .primary-btn {
-          margin-top: 18px;
-          height: 48px;
+          height: 44px;
           border-radius: 999px;
           border: none;
           background: linear-gradient(135deg, #cbb8ff, #a79bff);
           color: #2a2140;
+          font-size: 14.5px;
           font-weight: 600;
           cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
-        /* LOGIN HIGHLIGHT */
+        /* LOGIN */
         .secondary {
-          margin-top: 20px;
+          margin-top: 16px;
           text-align: center;
-          font-size: 13px;
-          opacity: 0.9;
+          font-size: 12.5px;
         }
 
         .login-highlight {
-          color: #cbb8ff;
+          color: #7b5cff;
           font-weight: 600;
           cursor: pointer;
-          transition: color 0.2s ease;
-        }
-
-        .login-highlight:hover {
-          color: #ffffff;
-          text-shadow: 0 0 10px rgba(203,184,255,0.6);
         }
 
         /* MOBILE */
@@ -264,7 +323,12 @@ const Register = () => {
           }
 
           .right-panel {
-            width: 100%;
+            justify-content: center;
+            padding-left: 0;
+          }
+
+          .form-card {
+            margin-left: 0;
           }
         }
       `}</style>

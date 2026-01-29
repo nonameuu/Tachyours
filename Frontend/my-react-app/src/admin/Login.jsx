@@ -1,131 +1,287 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-export default function Login() {
+const Login = () => {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
     identifier: "",
-    password: ""
+    password: "",
   });
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value
-    });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
-  setLoading(true);
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-  try {
-    const res = await fetch("http://localhost:5000/api/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(form)
-    });
+    try {
+      const res = await fetch("http://localhost:5000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      setError(data.message || "Login failed");
-    } else {
-      // ✅ SAVE USER FIRST
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      // ✅ REDIRECT BY ROLE
-      if (data.user.role === "admin") {
-        navigate("/admin/dashboard");
+      if (!res.ok) {
+        setError(data.message || "Login failed");
       } else {
-        navigate("/"); // customer → home page
+        localStorage.setItem("user", JSON.stringify(data.user));
+
+        if (data.user.role === "admin") {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/");
+        }
       }
+    } catch {
+      setError("Server error. Please try again.");
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    setError("Server error. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
-    <div className="login-page">
-      {/* TOP BAR */}
-      <header className="login-navbar">
-        <h1
-          className="brand"
-          onClick={() => navigate("/")}
-          style={{ cursor: "pointer" }}
-        >
-          TACHYONS
-        </h1>
-      </header>
+    <div className="signup-root">
+      {/* LEFT */}
+      <section className="left-panel">
+        <div className="branding">
+          <h1>
+            Start your journey
+            <br />
+            with Tachyons.
+          </h1>
+          <p>Sign in to continue your style journey.</p>
+        </div>
+      </section>
 
-      {/* LOGIN CONTENT */}
-      <div className="login-wrapper">
-        <div className="login-card">
-          <div className="login-logo">👕</div>
+      {/* RIGHT */}
+      <section className="right-panel">
+        <div className="form-card">
+          <h2>SIGN IN</h2>
 
-          <h2 className="login-title">TACHYONS</h2>
-          <p className="login-subtitle">
-            Welcome back! Your style missed you.
-          </p>
-
-          {/* ERROR MESSAGE */}
-          {error && <p style={{ color: "red" }}>{error}</p>}
-
-          <form className="login-form" onSubmit={handleSubmit}>
-            <input
-              type="text"
-              name="identifier"
-              placeholder="Email or Username"
-              value={form.identifier}
-              onChange={handleChange}
-              required
-            />
-
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={form.password}
-              onChange={handleChange}
-              required
-            />
-
-            <div className="login-options">
-              <label className="remember-me">
-                <input type="checkbox" />
-                <span>Remember me</span>
-              </label>
-
-              <Link to="/forgot-password" className="forgot-link">
-                Forget password?
-              </Link>
+          <form onSubmit={handleSubmit}>
+            <div className="field">
+              <label>Email or Username</label>
+              <input
+                name="identifier"
+                value={form.identifier}
+                onChange={handleChange}
+                placeholder="Email or Username"
+                required
+              />
             </div>
 
-            <button type="submit" className="login-btn" disabled={loading}>
-              {loading ? "Logging in..." : "Login"}
+            <div className="field">
+              <label>Password</label>
+              <input
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="Your password"
+                required
+              />
+            </div>
+
+            {error && (
+              <p style={{ color: "red", fontSize: 12 }}>{error}</p>
+            )}
+
+            <button className="primary-btn" type="submit" disabled={loading}>
+              {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 
-          <p className="signup-text">
-            New here? <Link to="/register">Create an account</Link>
+          <p className="secondary">
+            Don’t have an account?{" "}
+            <span
+              className="login-highlight"
+              onClick={() => navigate("/register")}
+            >
+              Sign up
+            </span>
           </p>
         </div>
-      </div>
+      </section>
 
-      <footer className="login-footer">
-        <p>Keep moving forward — even when the thread gets tangled.</p>
-        <small>© 2025 Tachyons Clothing. All Rights Reserved.</small>
-      </footer>
+      {/* CSS */}
+      <style>{`
+        * {
+          box-sizing: border-box;
+          font-family: "Montserrat", sans-serif;
+        }
+
+        body {
+          margin: 0;
+        }
+
+        .signup-root {
+          height: 100vh;
+          display: flex;
+          background: linear-gradient(
+            135deg,
+            #f3e8ff,
+            #e6f0ff,
+            #dcf7ef
+          );
+        }
+
+        /* LEFT */
+        .left-panel {
+          flex: 1;
+          display: flex;
+          align-items: center;
+        }
+
+        .branding {
+          padding-left: 120px;
+          max-width: 600px;
+        }
+
+        .branding h1 {
+          font-family: "Playfair Display", serif;
+          font-size: 52px;
+          font-weight: 600;
+          margin-bottom: 14px;
+          color: #111;
+        }
+
+        .branding p {
+          font-size: 17px;
+          line-height: 1.6;
+          color: #333;
+        }
+
+        /* RIGHT */
+        .right-panel {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          padding-left: 200px;
+        }
+
+        /* FORM CARD */
+        .form-card {
+          width: 360px;
+          padding: 28px;
+          border-radius: 22px;
+          background: rgba(255,255,255,0.65);
+          backdrop-filter: blur(16px);
+          box-shadow: 0 36px 70px rgba(0,0,0,0.15);
+          margin-left: 10px;
+        }
+
+        .form-card h2 {
+          text-align: center;
+          letter-spacing: 3px;
+          font-size: 17px;
+          margin-bottom: 20px;
+        }
+
+        /* FORM */
+        form {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+
+        .field {
+          display: flex;
+          flex-direction: column;
+        }
+
+        label {
+          font-size: 12.5px;
+          margin-bottom: 5px;
+          color: #333;
+        }
+
+        input {
+          height: 42px;
+          padding: 0 14px;
+          border-radius: 10px;
+          border: 1px solid #ddd;
+          font-size: 14px;
+        }
+
+        input::placeholder {
+          color: #999;
+        }
+
+        input:focus {
+          outline: none;
+          border-color: #bba8ff;
+        }
+
+        /* PRIMARY BUTTON */
+        .primary-btn {
+          height: 44px;
+          border-radius: 999px;
+          border: none;
+          background: linear-gradient(135deg, #cbb8ff, #a79bff);
+          color: #2a2140;
+          font-size: 14.5px;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-top: 8px;
+        }
+
+        .primary-btn:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+
+        /* FOOTER */
+        .secondary {
+          margin-top: 16px;
+          text-align: center;
+          font-size: 12.5px;
+        }
+
+        .login-highlight {
+          color: #7b5cff;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        .login-highlight:hover {
+          text-decoration: underline;
+        }
+
+        /* MOBILE */
+        @media (max-width: 768px) {
+          .signup-root {
+            flex-direction: column;
+          }
+
+          .left-panel {
+            display: none;
+          }
+
+          .right-panel {
+            justify-content: center;
+            padding-left: 0;
+          }
+
+          .form-card {
+            margin-left: 0;
+          }
+        }
+      `}</style>
     </div>
   );
-}
+};
+
+export default Login;
