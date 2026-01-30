@@ -372,6 +372,7 @@ export default function UserManagement() {
         </div>
 
       </div>
+      
 
       {/* DIVIDER */}
       <div className="modal-divider" />
@@ -397,6 +398,164 @@ export default function UserManagement() {
     </div>
   </div>
 )}
+
+  
+
+{/* 🔥 BUTTON FIX STYLES */}
+      <style jsx>{`
+        /* ===============================
+   ADMIN HEADER BUTTON CONTAINER
+================================ */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ===============================
+   PRIMARY BUTTON (Add / New)
+================================ */
+.primary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  height: 42px;
+  padding: 0 18px;
+
+  border-radius: 12px;
+  border: none;
+
+  background: #6f5cc3;
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.primary-btn svg {
+  font-size: 18px;
+}
+
+.primary-btn:hover {
+  background: #5c4bb3;
+}
+
+.primary-btn:active {
+  transform: scale(0.97);
+}
+
+.primary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===============================
+   ARCHIVE / DANGER BUTTON
+================================ */
+.archive-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  height: 42px;
+  padding: 0 18px;
+
+  border-radius: 12px;
+  border: 2px solid #ef4444;
+
+  background: transparent;
+  color: #ef4444;
+
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.archive-btn svg {
+  font-size: 18px;
+}
+
+.archive-btn:hover {
+  background: #fee2e2;
+}
+
+.archive-btn:active {
+  transform: scale(0.97);
+}
+
+/* ===============================
+   CANCEL / SECONDARY BUTTON
+================================ */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 42px;
+  padding: 0 18px;
+
+  border-radius: 12px;
+  border: 1px solid #d1d5db;
+
+  background: #ffffff;
+  color: #374151;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: #f3f4f6;
+}
+
+/* ===============================
+   ICON ONLY ACTION (tables)
+================================ */
+.icon-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  border-radius: 8px;
+  border: none;
+
+  background: transparent;
+  color: #4b5563;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.icon-action:hover {
+  background: #f3f4f6;
+}
+
+.icon-action.danger {
+  color: #ef4444;
+}
+
+.icon-action.danger:hover {
+  background: #fee2e2;
+}
+
+
+            `}</style>
     </div>
   );
 }

@@ -4,10 +4,9 @@ import Navbar from "../components-admin/Navbar";
 import Footer from "../components-admin/Footer";
 import {
   MdAdd,
-  MdClose,
-  MdDelete,
   MdEdit,
   MdArchive,
+  MdDelete,
 } from "react-icons/md";
 
 export default function OrderManagement() {
@@ -24,28 +23,41 @@ export default function OrderManagement() {
       id: "1001",
       customer: "John Doe",
       items: [{ name: "Jersey", qty: 2, price: 425 }],
-      total: 850,
+      subtotal: 850,
+      discount: {
+        type: "Bulk Discount",
+        amount: 85,
+      },
+      total: 765,
       date: "November 1, 2024",
       payment: "Gcash",
       status: "Delivered",
     },
+    {
+      id: "1002",
+      customer: "Maria Santos",
+      items: [{ name: "Jersey", qty: 1, price: 425 }],
+      subtotal: 425,
+      discount: null,
+      total: 425,
+      date: "Today",
+      payment: "Gcash",
+      status: "Processing",
+    },
   ]);
 
-  /* EDIT MODE */
+  /* FORM */
   const [editingId, setEditingId] = useState(null);
-
-  /* ORDER FORM */
   const [customer, setCustomer] = useState("");
   const [items, setItems] = useState([{ name: "", qty: 1, price: 0 }]);
 
-  /* TOGGLE SELECT */
+  /* HELPERS */
   const toggleSelectOrder = (id) => {
     setSelectedOrders((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   };
 
-  /* CONFIRM ARCHIVE */
   const confirmArchive = () => {
     if (selectedOrders.length === 0) return;
 
@@ -61,17 +73,12 @@ export default function OrderManagement() {
     setArchiveMode(false);
   };
 
-  /* ADD ITEM */
-  const addItem = () => {
+  const addItem = () =>
     setItems([...items, { name: "", qty: 1, price: 0 }]);
-  };
 
-  /* REMOVE ITEM */
-  const removeItem = (index) => {
+  const removeItem = (index) =>
     setItems(items.filter((_, i) => i !== index));
-  };
 
-  /* UPDATE ITEM */
   const updateItem = (index, field, value) => {
     const updated = [...items];
     updated[index][field] =
@@ -79,13 +86,11 @@ export default function OrderManagement() {
     setItems(updated);
   };
 
-  /* TOTAL */
-  const total = items.reduce(
+  const subtotal = items.reduce(
     (sum, item) => sum + item.qty * item.price,
     0
   );
 
-  /* OPEN NEW */
   const openNewOrder = () => {
     setEditingId(null);
     setCustomer("");
@@ -93,40 +98,11 @@ export default function OrderManagement() {
     setShowOrderModal(true);
   };
 
-  /* OPEN EDIT */
   const openEditOrder = (order) => {
     setEditingId(order.id);
     setCustomer(order.customer);
     setItems(order.items);
     setShowOrderModal(true);
-  };
-
-  /* SAVE / UPDATE */
-  const saveOrder = () => {
-    if (!customer || items.some((i) => !i.name)) return;
-
-    if (editingId) {
-      setOrders((prev) =>
-        prev.map((o) =>
-          o.id === editingId ? { ...o, customer, items, total } : o
-        )
-      );
-    } else {
-      setOrders((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString().slice(-5),
-          customer,
-          items,
-          total,
-          date: "Today",
-          payment: "Gcash",
-          status: "Processing",
-        },
-      ]);
-    }
-
-    setShowOrderModal(false);
   };
 
   return (
@@ -161,8 +137,7 @@ export default function OrderManagement() {
                 </button>
 
                 <button
-                  className="add-user-btn"
-                  style={{ background: "#fde2e2", color: "#b91c1c" }}
+                  className="add-user-btn archive"
                   onClick={() => {
                     if (!archiveMode) {
                       setArchiveMode(true);
@@ -182,63 +157,20 @@ export default function OrderManagement() {
               </div>
             </div>
 
-            {/* ================= MOBILE ORDER CARDS ================= */}
-            <div className="order-cards mobile-only">
-              {orders.map((o) => (
-                <div key={o.id} className="order-card">
-                  <div className="order-card-header">
-                    <div>
-                      <div className="order-id">Order #{o.id}</div>
-                      <div className="order-customer">{o.customer}</div>
-                    </div>
-
-                    <span className={`order-status ${o.status.toLowerCase()}`}>
-                      {o.status}
-                    </span>
-                  </div>
-
-                  <div className="order-card-body">
-                    <div className="order-row">
-                      <span>Total</span>
-                      <strong>₱{o.total}</strong>
-                    </div>
-
-                    <div className="order-row">
-                      <span>Date</span>
-                      <span>{o.date}</span>
-                    </div>
-
-                    <div className="order-row">
-                      <span>Payment</span>
-                      <span>{o.payment}</span>
-                    </div>
-                  </div>
-
-                  <div className="order-card-actions">
-                    <button
-                      className="icon-action"
-                      onClick={() => openEditOrder(o)}
-                    >
-                      <MdEdit />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* ================= DESKTOP TABLE ================= */}
-            <div className="audit-table-wrapper desktop-only">
+            {/* TABLE */}
+            <div className="audit-table-wrapper">
               <table className="audit-table">
                 <thead>
                   <tr>
                     <th></th>
                     <th>Order #</th>
                     <th>Customer</th>
+                    <th>Discount</th>
                     <th>Total</th>
                     <th>Date</th>
                     <th>Payment</th>
                     <th>Status</th>
-                    <th>Actions</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
 
@@ -249,7 +181,6 @@ export default function OrderManagement() {
                         {archiveMode && (
                           <input
                             type="checkbox"
-                            className="user-checkbox"
                             checked={selectedOrders.includes(o.id)}
                             onChange={() => toggleSelectOrder(o.id)}
                           />
@@ -257,7 +188,16 @@ export default function OrderManagement() {
                       </td>
                       <td>{o.id}</td>
                       <td>{o.customer}</td>
-                      <td>₱{o.total}</td>
+                      <td>
+                        {o.discount ? (
+                          <span className="discount-badge">
+                            {o.discount.type}
+                          </span>
+                        ) : (
+                          <span className="no-discount">—</span>
+                        )}
+                      </td>
+                      <td>₱{o.total.toFixed(2)}</td>
                       <td>{o.date}</td>
                       <td>{o.payment}</td>
                       <td>
@@ -287,7 +227,7 @@ export default function OrderManagement() {
 
       <Footer />
 
-      {/* ================= ORDER MODAL ================= */}
+      {/* MODAL */}
       {showOrderModal && (
         <div className="modal-overlay">
           <div className="modal modal-md">
@@ -302,83 +242,102 @@ export default function OrderManagement() {
             </div>
 
             <div className="modal-body">
-              <div className="form-group">
-                <label>Customer Name *</label>
-                <input
-                  value={customer}
-                  onChange={(e) => setCustomer(e.target.value)}
-                />
-              </div>
+              <label>Customer Name *</label>
+              <input value={customer} />
 
               <label>Order Items</label>
 
               {items.map((item, i) => (
-                <div key={i} className="order-item-card">
-                  <input
-                    placeholder="Item name"
-                    value={item.name}
-                    onChange={(e) =>
-                      updateItem(i, "name", e.target.value)
-                    }
-                  />
-
-                  <div className="order-item-row">
-                    <input
-                      type="number"
-                      value={item.qty}
-                      onChange={(e) =>
-                        updateItem(i, "qty", e.target.value)
-                      }
-                    />
-                    <input
-                      type="number"
-                      value={item.price}
-                      onChange={(e) =>
-                        updateItem(i, "price", e.target.value)
-                      }
-                    />
-                    {items.length > 1 && (
-                      <button
-                        className="icon-action danger"
-                        onClick={() => removeItem(i)}
-                      >
-                        <MdDelete />
-                      </button>
-                    )}
-                  </div>
+                <div key={i} className="order-item-row">
+                  <input value={item.name} />
+                  <input type="number" value={item.qty} />
+                  <input type="number" value={item.price} />
+                  {items.length > 1 && (
+                    <button className="icon-action danger">
+                      <MdDelete />
+                    </button>
+                  )}
                 </div>
               ))}
 
-              <button className="btn-secondary" onClick={addItem}>
-                + Add Item
-              </button>
-
-              <div className="modal-divider" />
-
-              <div className="order-total">
-                <span>Total</span>
-                <strong>₱{total}</strong>
+              <div className="order-summary">
+                <div>
+                  <span>Subtotal</span>
+                  <strong>₱{subtotal.toFixed(2)}</strong>
+                </div>
+                <div className="discount-row">
+                  <span>Discount</span>
+                  <strong className="discount-value">₱0.00</strong>
+                </div>
+                <div className="order-total">
+                  <span>Total</span>
+                  <strong>₱{subtotal.toFixed(2)}</strong>
+                </div>
               </div>
-            </div>
-
-            <div className="modal-actions">
-              <button
-                className="btn-secondary"
-                onClick={() => setShowOrderModal(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="primary-btn"
-                onClick={saveOrder}
-                disabled={!customer || items.some((i) => !i.name)}
-              >
-                {editingId ? "Update Order" : "Save Order"}
-              </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* CSS */}
+      <style jsx>{`
+        .discount-badge {
+          background: #f1f0ff;
+          color: #4b3fd1;
+          padding: 4px 10px;
+          border-radius: 999px;
+          font-size: 12px;
+        }
+
+        .no-discount {
+          color: #999;
+        }
+
+        .order-summary {
+          margin-top: 16px;
+          border-top: 1px solid #eee;
+          padding-top: 12px;
+        }
+
+        .order-summary div {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 6px;
+        }
+
+        .discount-row strong {
+          color: #4b3fd1;
+        }
+
+                .add-user-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          height: 30px;
+          padding: 0 18px;
+          border-radius: 12px;
+          border: none;
+          background: #e6def4;
+          color: #4c1d95;
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .add-user-btn:hover {
+          background: #ddd3f0;
+        }
+
+        .add-user-btn.archive {
+          background: #fde8e8;
+          color: #dc2626;
+        }
+
+        .add-user-btn.archive:hover {
+          background: #fbd5d5;
+        }
+      `}</style>
     </div>
   );
 }
