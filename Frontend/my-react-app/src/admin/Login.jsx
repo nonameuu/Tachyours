@@ -1,16 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    identifier: "",
-    password: "",
-  });
-
+  const [form, setForm] = useState({ identifier: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    document.body.classList.add("page-enter");
+    return () => document.body.classList.remove("page-enter");
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -22,7 +23,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/login", {
+      const res = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -32,15 +33,15 @@ const Login = () => {
 
       if (!res.ok) {
         setError(data.message || "Login failed");
-      } else {
-        localStorage.setItem("user", JSON.stringify(data.user));
-
-        if (data.user.role === "admin") {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/");
-        }
+        return;
       }
+
+      localStorage.setItem("role", data.role);
+      localStorage.setItem("adminName", data.full_name || "Admin");
+      localStorage.setItem("adminEmail", data.email || "admin@tachyons.app");
+
+      if (data.role === "admin") navigate("/dashboard");
+      else navigate("/");
     } catch {
       setError("Server error. Please try again.");
     } finally {
@@ -49,7 +50,7 @@ const Login = () => {
   };
 
   return (
-    <div className="signup-root">
+    <div className="signup-root page">
       {/* LEFT */}
       <section className="left-panel">
         <div className="branding">
@@ -66,6 +67,27 @@ const Login = () => {
       <section className="right-panel">
         <div className="form-card">
           <h2>SIGN IN</h2>
+
+          {/* ✅ GOOGLE SIGN IN (SAME AS REGISTER) */}
+          <button
+            className="google-btn"
+            type="button"
+            onClick={() =>
+              (window.location.href =
+                "http://localhost:5000/api/auth/google")
+            }
+          >
+            <img
+              src="https://www.svgrepo.com/show/475656/google-color.svg"
+              alt="Google"
+            />
+            Sign in with Google
+          </button>
+
+          {/* ✅ OR DIVIDER (SAME AS REGISTER) */}
+          <div className="or-divider">
+            <span>OR</span>
+          </div>
 
           <form onSubmit={handleSubmit}>
             <div className="field">
@@ -91,11 +113,9 @@ const Login = () => {
               />
             </div>
 
-            {error && (
-              <p style={{ color: "red", fontSize: 12 }}>{error}</p>
-            )}
+            {error && <p style={{ color: "red", fontSize: 12 }}>{error}</p>}
 
-            <button className="primary-btn" type="submit" disabled={loading}>
+            <button className="primary-btn" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
@@ -112,8 +132,8 @@ const Login = () => {
         </div>
       </section>
 
-      {/* CSS */}
-      <style>{`
+      {/* ================= STYLES ================= */}
+      <style jsx>{`
         * {
           box-sizing: border-box;
           font-family: "Montserrat", sans-serif;
@@ -121,6 +141,36 @@ const Login = () => {
 
         body {
           margin: 0;
+        }
+
+        .page {
+          animation: fadeSlide 0.45s ease forwards;
+        }
+
+        @keyframes fadeSlide {
+          from {
+            opacity: 0;
+            transform: translateY(16px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .form-card {
+          animation: cardPop 0.45s ease 0.1s both;
+        }
+
+        @keyframes cardPop {
+          from {
+            opacity: 0;
+            transform: scale(0.96) translateY(12px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
         }
 
         .signup-root {
@@ -134,7 +184,6 @@ const Login = () => {
           );
         }
 
-        /* LEFT */
         .left-panel {
           flex: 1;
           display: flex;
@@ -160,7 +209,6 @@ const Login = () => {
           color: #333;
         }
 
-        /* RIGHT */
         .right-panel {
           flex: 1;
           display: flex;
@@ -169,25 +217,66 @@ const Login = () => {
           padding-left: 200px;
         }
 
-        /* FORM CARD */
         .form-card {
           width: 360px;
           padding: 28px;
           border-radius: 22px;
-          background: rgba(255,255,255,0.65);
+          background: rgba(255, 255, 255, 0.65);
           backdrop-filter: blur(16px);
-          box-shadow: 0 36px 70px rgba(0,0,0,0.15);
-          margin-left: 10px;
+          box-shadow: 0 36px 70px rgba(0, 0, 0, 0.15);
         }
 
         .form-card h2 {
           text-align: center;
           letter-spacing: 3px;
           font-size: 17px;
-          margin-bottom: 20px;
+          margin-bottom: 18px;
         }
 
-        /* FORM */
+        /* 🔥 GOOGLE BUTTON (SAME AS REGISTER) */
+        .google-btn {
+          width: 100%;
+          height: 44px;
+          border-radius: 999px;
+          border: none;
+          background: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          font-size: 14px;
+          cursor: pointer;
+          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+          transition: all 0.2s ease;
+        }
+
+        .google-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12);
+        }
+
+        .google-btn img {
+          width: 18px;
+        }
+
+        /* 🔥 OR DIVIDER */
+        .or-divider {
+          margin: 16px 0;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-size: 12px;
+          color: #777;
+        }
+
+        .or-divider::before,
+        .or-divider::after {
+          content: "";
+          flex: 1;
+          height: 1px;
+          background: #ddd;
+        }
+
         form {
           display: flex;
           flex-direction: column;
@@ -213,37 +302,41 @@ const Login = () => {
           font-size: 14px;
         }
 
-        input::placeholder {
-          color: #999;
-        }
-
         input:focus {
           outline: none;
           border-color: #bba8ff;
         }
 
-        /* PRIMARY BUTTON */
         .primary-btn {
-          height: 44px;
-          border-radius: 999px;
-          border: none;
-          background: linear-gradient(135deg, #cbb8ff, #a79bff);
-          color: #2a2140;
-          font-size: 14.5px;
-          font-weight: 600;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-top: 8px;
-        }
+  width: 100%;
+  height: 44px;
 
-        .primary-btn:disabled {
-          opacity: 0.7;
-          cursor: not-allowed;
-        }
+  border-radius: 999px;
+  border: none;
 
-        /* FOOTER */
+  background: linear-gradient(135deg, #cbb8ff, #a79bff);
+  color: #2a2140;
+
+  font-size: 14.5px;
+  font-weight: 600;
+
+  display: flex;             
+  align-items: center;      
+  justify-content: center;  
+
+  padding: 0;                 
+  line-height: 1;             
+
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.primary-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+
         .secondary {
           margin-top: 16px;
           text-align: center;
@@ -256,11 +349,6 @@ const Login = () => {
           cursor: pointer;
         }
 
-        .login-highlight:hover {
-          text-decoration: underline;
-        }
-
-        /* MOBILE */
         @media (max-width: 768px) {
           .signup-root {
             flex-direction: column;
@@ -273,10 +361,6 @@ const Login = () => {
           .right-panel {
             justify-content: center;
             padding-left: 0;
-          }
-
-          .form-card {
-            margin-left: 0;
           }
         }
       `}</style>

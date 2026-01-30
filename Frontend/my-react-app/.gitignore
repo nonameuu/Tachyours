@@ -1,3 +1,15 @@
+# ENV FILES (SECRETS)
+.env
+.env.*
+Backend/.env
+Frontend/.env
+
+# NODE MODULES (ALL)
+node_modules/
+Backend/node_modules/
+Frontend/node_modules/
+
+
 # Logs
 logs
 *.log

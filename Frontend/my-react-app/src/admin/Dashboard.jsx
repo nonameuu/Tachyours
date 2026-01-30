@@ -20,7 +20,7 @@ export default function Dashboard() {
       <Navbar onToggleSidebar={() => setSidebarOpen(prev => !prev)} />
 
       <div className="body-layout">
-        {/* OVERLAY (mobile only) */}
+        {/* MOBILE OVERLAY */}
         {sidebarOpen && (
           <div
             className="sidebar-overlay"
@@ -31,7 +31,7 @@ export default function Dashboard() {
         {/* SIDEBAR */}
         <aside
           className={`sidebar-wrapper ${sidebarOpen ? "open" : ""}`}
-          onClick={(e) => e.stopPropagation()} // ✅ prevent auto-close
+          onClick={(e) => e.stopPropagation()}
         >
           <Sidebar />
         </aside>
@@ -39,6 +39,16 @@ export default function Dashboard() {
         {/* MAIN CONTENT */}
         <main className="content" onClick={closeSidebar}>
           <div className="main-content dashboard-layout">
+
+            {/* ===== PAGE HEADER ===== */}
+            <div className="dashboard-header">
+              <div>
+                <h2>Dashboard</h2>
+                <p className="subtext">
+                  Overview of sales, orders, and inventory performance
+                </p>
+              </div>
+            </div>
 
             {/* ===== TOP STATS ===== */}
             <div className="dashboard-stats">
@@ -49,23 +59,29 @@ export default function Dashboard() {
 
             {/* ===== SALES OVERVIEW ===== */}
             <section className="dashboard-section">
-              <h3 className="section-title">Sales Overview</h3>
+              <div className="section-header">
+                <h3 className="section-title">Sales Overview</h3>
+              </div>
               <div className="card large-card">
                 <SalesLineChart />
               </div>
             </section>
 
-            {/* ===== BOTTOM ROW ===== */}
+            {/* ===== LOWER ROW ===== */}
             <div className="dashboard-bottom">
               <section className="dashboard-section">
-                <h3 className="section-title">Inventory Overview</h3>
+                <div className="section-header">
+                  <h3 className="section-title">Inventory Overview</h3>
+                </div>
                 <div className="card">
                   <InventoryBarChart />
                 </div>
               </section>
 
               <section className="dashboard-section">
-                <h3 className="section-title">Performance</h3>
+                <div className="section-header">
+                  <h3 className="section-title">Performance</h3>
+                </div>
                 <div className="card">
                   <PerformancePieChart />
                 </div>
@@ -77,6 +93,87 @@ export default function Dashboard() {
       </div>
 
       <Footer />
+
+      {/* ================= STYLES ================= */}
+      <style jsx>{`
+        .dashboard-layout {
+          padding: 28px 32px 40px;
+          display: flex;
+          flex-direction: column;
+          gap: 28px;
+        }
+
+        .dashboard-header h2 {
+          font-size: 26px;
+          font-weight: 700;
+          margin-bottom: 6px;
+        }
+
+        .subtext {
+          font-size: 14px;
+          color: #666;
+        }
+
+        .dashboard-stats {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: 20px;
+        }
+
+        .dashboard-section {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+
+        .section-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .section-title {
+          font-size: 16px;
+          font-weight: 600;
+          letter-spacing: 0.4px;
+        }
+
+        .dashboard-bottom {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 24px;
+        }
+
+        .card {
+          background: #ffffff;
+          border-radius: 18px;
+          padding: 20px;
+          box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+          cursor: pointer;
+        }
+
+        .card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 18px 36px rgba(0, 0, 0, 0.16);
+        }
+
+        .large-card {
+          min-height: 320px;
+        }
+
+        @media (max-width: 1024px) {
+          .dashboard-bottom {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .dashboard-layout {
+            padding: 20px;
+          }
+        }
+      `}</style>
     </div>
   );
 }
